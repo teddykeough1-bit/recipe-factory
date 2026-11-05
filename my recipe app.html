@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Family Recipe Book</title>
+    <style>
+        :root {
+            --primary: #FF5722;
+            --primary-dark: #E64A19;
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #E0E0E0;
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-tag {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.25);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .admin-badge {
+            font-size: 0.75rem;
+            background: rgba(0,0,0,0.25);
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .main-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: calc(80px + var(--safe-bottom));
+        }
+
+        .view-content {
+            display: none;
+        }
+        .view-content.active {
+            display: block;
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(60px + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 2px;
+            fill: currentColor;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            outline: none;
+            background: white;
+        }
+        .search-bar:focus {
+            border-color: var(--primary);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            scrollbar-width: none;
+        }
+        .filter-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-pill {
+            flex: 0 0 auto;
+            padding: 6px 14px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-pill.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .recipe-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recipe-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recipe-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .recipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .recipe-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .recipe-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+
+        .recipe-category {
+            display: inline-block;
+            background: #FFE0B2;
+            color: #E65100;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .recipe-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .recipe-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .card-btn:hover {
+            background: #F0F0F0;
+            color: var(--text-main);
+        }
+        .card-btn.delete-btn {
+            color: #d32f2f;
+            border-color: #ffcdd2;
+        }
+        .card-btn.delete-btn:hover {
+            background: #ffebee;
+        }
+
+        .recipe-details {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            white-space: pre-line;
+            margin-top: 8px;
+        }
+
+        .fav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: #CCC;
+            transition: transform 0.1s;
+        }
+        .fav-btn.favorited {
+            color: #FFC107;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            height: 120px;
+        }
+
+        .btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(255,87,34,0.3);
+        }
+        .btn:active {
+            background: var(--primary-dark);
+        }
+
+        .admin-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            max-width: 500px;
+            margin: 10px auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: #F8F9FA;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .app-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .app-modal-overlay.active {
+            display: flex;
+        }
+        .app-modal-card {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: popIn 0.2s ease-out;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .app-modal-header {
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .app-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .utility-box {
+            background: #F1F3F5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .utility-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .scale-btns, .timer-preset-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .scale-btn, .timer-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .scale-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .timer-display {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 8px 0;
+        }
+
+        .cooking-mode-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #FFF;
+            z-index: 3000;
+            flex-direction: column;
+            padding: 24px;
+        }
+        .cooking-mode-overlay.active {
+            display: flex;
+        }
+        .step-focus-text {
+            flex: 1;
+            font-size: 1.5rem;
+            line-height: 1.5;
+            color: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .shopping-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .shopping-item.checked label {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .review-card {
+            background: #F8F9FA;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 6px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <span id="app-header-title" style="font-weight:700;">Family Recipes</span>
+            <span id="userProfileTag" class="user-tag">Logged in as: Guest</span>
+        </div>
+        <span id="adminStatusBadge" class="admin-badge" style="display: none;">Admin</span>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- BROWSE VIEW -->
+        <div id="view-browse" class="view-content active">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Search recipes or ingredients..." oninput="window.filterAndRenderRecipes()">
+            
+            <div class="filter-container" id="filterContainer">
+                <button class="filter-pill active" onclick="window.setFilter('all', this)">All</button>
+                <button class="filter-pill" onclick="window.setFilter('food', this)">Food</button>
+                <button class="filter-pill" onclick="window.setFilter('starters', this)">Starters</button>
+                <button class="filter-pill" onclick="window.setFilter('mains', this)">Mains</button>
+                <button class="filter-pill" onclick="window.setFilter('desserts', this)">Desserts</button>
+                <button class="filter-pill" onclick="window.setFilter('drinks', this)">Drinks</button>
+                <button class="filter-pill" onclick="window.setFilter('vegetarian', this)">Vegetarian</button>
+                <button class="filter-pill" onclick="window.setFilter('gluten-free', this)">Gluten-Free</button>
+                <button class="filter-pill" onclick="window.setFilter('quick', this)">Quick (<30m)</button>
+                <button class="filter-pill" onclick="window.setFilter('popular', this)">Most Popular</button>
+                <button class="filter-pill" onclick="window.setFilter('favorites', this)">Favorites</button>
+            </div>
+
+            <div class="recipe-grid" id="recipeGrid"></div>
+        </div>
+
+        <!-- UPLOAD VIEW -->
+        <div id="view-upload" class="view-content">
+            <div class="form-group">
+                <label>Recipe Title</label>
+                <input type="text" id="upTitle" class="form-control" placeholder="e.g., Grandma's Apple Pie">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="upCategory" class="form-control">
+                    <option value="starters">Starters</option>
+                    <option value="mains">Mains</option>
+                    <option value="desserts">Desserts</option>
+                    <option value="drinks">Drinks</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Image URL (Optional)</label>
+                <input type="url" id="upImage" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+            </div>
+            <div class="form-group">
+                <label>Dietary & Quick Tags</label>
+                <div style="display:flex; gap:12px; font-size:0.9rem;">
+                    <label><input type="checkbox" id="tagVeg"> Vegetarian</label>
+                    <label><input type="checkbox" id="tagGF"> Gluten-Free</label>
+                    <label><input type="checkbox" id="tagQuick"> Quick (<30m)</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Recipe Details & Ingredients</label>
+                <textarea id="upDetails" class="form-control" placeholder="List ingredients with numbers (e.g., 2 eggs, 250g flour) and step-by-step instructions..."></textarea>
+            </div>
+            <button class="btn" onclick="window.saveUploadedRecipe()">Save Recipe Card</button>
+        </div>
+
+        <!-- COLLECTIONS VIEW -->
+        <div id="view-collections" class="view-content">
+            <h3 style="margin-bottom:12px;">My Saved Collections</h3>
+            <div class="form-group" style="display:flex; gap:8px;">
+                <input type="text" id="newCollectionName" class="form-control" placeholder="New collection name (e.g., Sunday Roast)...">
+                <button class="btn" style="width:auto; padding: 0 16px;" onclick="window.createCollection()">Create</button>
+            </div>
+            <div id="collectionsContainer"></div>
+        </div>
+
+        <!-- SHOPPING LIST VIEW -->
+        <div id="view-shopping" class="view-content">
+            <div class="form-group" style="display: flex; gap: 8px;">
+                <input type="text" id="shopItemInput" class="form-control" placeholder="Add custom grocery item...">
+                <button class="btn" style="width: auto; padding: 0 20px;" onclick="window.addShoppingItem()">Add</button>
+            </div>
+            <div id="shoppingListContainer"></div>
+        </div>
+
+        <!-- LOG IN & ACCOUNT SELECTOR VIEW -->
+        <div id="view-account" class="view-content">
+            <div class="admin-card" style="text-align:center;">
+                <h2 style="margin-bottom: 12px;">LOG IN</h2>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Select your profile below to tie ratings, favorites, and collections to your name.</p>
+                <div class="form-group" style="text-align:left;">
+                    <label>Select Profile</label>
+                    <select id="userSelector" class="form-control" onchange="window.selectAccount(this.value)">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN PORTAL VIEW -->
+        <div id="view-admin" class="view-content">
+            <div class="admin-card" id="adminCardContent"></div>
+        </div>
+
+    </div>
+
+    <!-- IN-APP WINDOW MODAL -->
+    <div class="app-modal-overlay" id="recipeModal" onclick="window.closeAppModal(event)">
+        <div class="app-modal-card" onclick="event.stopPropagation()">
+            <div class="app-modal-header">
+                <span class="recipe-category" id="modalCategory" style="margin: 0; background: white; color: var(--primary);">CATEGORY</span>
+                <button class="app-modal-close" onclick="window.closeAppModal()">&times;</button>
+            </div>
+            <div class="app-modal-body">
+                <img id="modalImage" class="recipe-img" style="display:none;" alt="Recipe photo">
+                <h2 id="modalTitle" style="margin-bottom: 8px; font-size: 1.4rem;">Recipe Title</h2>
+                
+                <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                    <button class="card-btn" style="background:#E8F5E9; color:#2E7D32;" onclick="window.markRecipeCooked()">🍳 Cooked This Today</button>
+                    <button class="card-btn" onclick="window.startCookingMode()">📖 Cooking Mode</button>
+                    <button class="card-btn" onclick="window.exportRecipeCard()">📋 Export Card</button>
+                    <button class="card-btn" onclick="window.promptAddToCollection()">📁 Add to Collection</button>
+                </div>
+
+                <!-- Scaler & Unit Converter Utility -->
+                <div class="utility-box">
+                    <div class="utility-title">Scale Portion & Units</div>
+                    <div class="scale-btns" style="margin-bottom:8px;">
+                        <button class="scale-btn active" onclick="window.scaleIngredients(1, this)">1x</button>
+                        <button class="scale-btn" onclick="window.scaleIngredients(2, this)">2x Double</button>
+                        <button class="scale-btn" onclick="window.scaleIngredients(4, this)">4x Quadruple</button>
+                    </div>
+                    <div class="scale-btns">
+                        <button class="scale-btn active" id="unitMetricBtn" onclick="window.toggleUnits('metric')">Metric (g/ml)</button>
+                        <button class="scale-btn" id="unitImperialBtn" onclick="window.toggleUnits('imperial')">Imperial (oz/cups)</button>
+                    </div>
+                </div>
+
+                <!-- Interactive Kitchen Timer -->
+                <div class="utility-box">
+                    <div class="utility-title">Kitchen Timer</div>
+                    <div class="timer-preset-btns">
+                        <button class="timer-btn" onclick="window.setKitchenTimer(5)">5m</button>
+                        <button class="timer-btn" onclick="window.setKitchenTimer(10)">10m</button>
+                        <button class="timer-btn" onclick="window.setKitchenTimer(15)">15m</button>
+                        <button class="timer-btn" onclick="window.setKitchenTimer(30)">30m</button>
+                    </div>
+                    <div class="timer-display" id="timerDisplay">00:00</div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="card-btn" onclick="window.toggleTimer()">Start / Pause</button>
+                        <button class="card-btn" onclick="window.resetTimer()">Reset</button>
+                    </div>
+                </div>
+
+                <div id="modalDetails" class="recipe-details" style="font-size: 1rem; color: #333;">Details...</div>
+                
+                <button class="btn" style="margin-top: 16px; background: #2E7D32;" onclick="window.addRecipeToShoppingList()">+ Add Ingredients to Shopping List</button>
+
+                <!-- Reviews & Ratings Section -->
+                <div style="margin-top:24px; border-top:1px solid var(--border-color); padding-top:16px;">
+                    <h4>Family Reviews & Ratings</h4>
+                    <div class="form-group" style="margin-top:8px;">
+                        <select id="reviewRatingSelect" class="form-control" style="margin-bottom:6px;">
+                            <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                            <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                            <option value="3">⭐⭐⭐ (3/5)</option>
+                            <option value="2">⭐⭐ (2/5)</option>
+                            <option value="1">⭐ (1/5)</option>
+                        </select>
+                        <input type="text" id="reviewTextInput" class="form-control" placeholder="Add a comment or modification note...">
+                        <button class="btn" style="margin-top:6px; padding:8px;" onclick="window.submitRecipeReview()">Submit Review</button>
+                    </div>
+                    <div id="recipeReviewsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN STEP-BY-STEP COOKING MODE -->
+    <div class="cooking-mode-overlay" id="cookingModeOverlay">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span id="cookingStepHeader" style="font-weight:700; color:var(--primary);">Step 1</span>
+            <button class="card-btn delete-btn" onclick="window.exitCookingMode()">Exit Cooking Mode</button>
+        </div>
+        <div class="step-focus-text" id="cookingStepText">Loading step...</div>
+        <div style="display:flex; gap:12px;">
+            <button class="btn" style="background:#666;" onclick="window.navStep(-1)">Previous</button>
+            <button class="btn" onclick="window.navStep(1)">Next Step</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav>
+        <button class="nav-item active" onclick="window.switchView('browse', this)">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            Browse
+        </button>
+        <button class="nav-item" onclick="window.switchView('upload', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Add
+        </button>
+        <button class="nav-item" onclick="window.switchView('collections', this)">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            Lists
+        </button>
+        <button class="nav-item" onclick="window.switchView('shopping', this)">
+            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            Grocery
+        </button>
+        <button class="nav-item" onclick="window.switchView('account', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            LOG IN
+        </button>
+        <button class="nav-item" onclick="window.switchView('admin', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            Admin
+        </button>
+    </nav>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCv18t11RS-xlsLiAuhHTTqkgTqCknlnQ",
+            authDomain: "the-recipe-factory-b31e1.firebaseapp.com",
+            databaseURL: "https://the-recipe-factory-b31e1-default-rtdb.firebaseio.com",
+            projectId: "the-recipe-factory-b31e1",
+            storageBucket: "the-recipe-factory-b31e1.firebasestorage.app",
+            messagingSenderId: "399882784864",
+            appId: "1:399882784864:web:687cc4440ee53e00d8b305"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const recipesRef = ref(db, 'recipes');
+        const shoppingRef = ref(db, 'shopping');
+        const usersRef = ref(db, 'users');
+        const collectionsRef = ref(db, 'collections');
+
+        let recipes = {};
+        let shoppingItems = {};
+        let users = {};
+        let collections = {};
+        let currentFilter = 'all';
+        let isAdmin = localStorage.getItem('recipe_admin_auth') === 'true';
+        let currentUser = localStorage.getItem('recipe_current_user') || 'Guest';
+
+        let currentModalKey = null;
+        let currentModalRecipe = null;
+        let originalModalDetails = '';
+        let currentUnitSystem = 'metric';
+
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let timerRunning = false;
+
+        let cookingSteps = [];
+        let currentStepIdx = 0;
+
+        onValue(recipesRef, (snapshot) => {
+            recipes = snapshot.val() || {};
+            window.filterAndRenderRecipes();
+        });
+
+        onValue(shoppingRef, (snapshot) => {
+            shoppingItems = snapshot.val() || {};
+            renderShoppingList();
+        });
+
+        onValue(usersRef, (snapshot) => {
+            users = snapshot.val() || {};
+            renderUserDropdown();
+        });
+
+        onValue(collectionsRef, (snapshot) => {
+            collections = snapshot.val() || {};
+            renderCollections();
+        });
+
+        updateUserTag();
+
+        function updateUserTag() {
+            document.getElementById('userProfileTag').innerText = `Logged in as: ${currentUser}`;
+        }
+
+        function renderUserDropdown() {
+            const select = document.getElementById('userSelector');
+            if (!select) return;
+            const userKeys = Object.keys(users);
+            select.innerHTML = `<option value="Guest" ${currentUser === 'Guest' ? 'selected' : ''}>Guest</option>` + 
+                userKeys.map(k => `<option value="${users[k].name}" ${currentUser === users[k].name ? 'selected' : ''}>${users[k].name}</option>`).join('');
+        }
+
+        window.selectAccount = function(name) {
+            currentUser = name;
+            localStorage.setItem('recipe_current_user', name);
+            updateUserTag();
+            alert(`Logged in as ${name}`);
+        };
+
+        window.switchView = function(viewName, element) {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav .nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('view-' + viewName).classList.add('active');
+            if (element) element.classList.add('active');
+
+            const headerTitle = document.getElementById('app-header-title');
+            if (viewName === 'browse') headerTitle.innerText = 'Family Recipes';
+            if (viewName === 'upload') headerTitle.innerText = 'Add New Recipe';
+            if (viewName === 'collections') headerTitle.innerText = 'Saved Collections';
+            if (viewName === 'shopping') headerTitle.innerText = 'Shopping List';
+            if (viewName === 'account') headerTitle.innerText = 'LOG IN';
+            if (viewName === 'admin') {
+                headerTitle.innerText = 'Admin Portal';
+                renderAdminUI();
+            }
+
+            document.getElementById('adminStatusBadge').style.display = isAdmin ? 'inline-block' : 'none';
+        };
+
+        function renderAdminUI() {
+            const container = document.getElementById('adminCardContent');
+            if (isAdmin) {
+                const totalRecipes = Object.keys(recipes).length;
+                let totalCooks = 0;
+                let topRecipe = 'None';
+                let maxCooks = 0;
+                let forgottenGems = 0;
+                const now = Date.now();
+
+                Object.values(recipes).forEach(r => {
+                    const cooks = r.cookCount || 0;
+                    totalCooks += cooks;
+                    if (cooks > maxCooks) {
+                        maxCooks = cooks;
+                        topRecipe = r.title;
+                    }
+                    if (!r.lastCooked || (now - r.lastCooked > 60 * 24 * 60 * 60 * 1000)) {
+                        forgottenGems++;
+                    }
+                });
+
+                container.innerHTML = `
+                    <h2 style="margin-bottom:12px;">Admin Dashboard</h2>
+                    <div class="stat-grid">
+                        <div class="stat-box"><div class="stat-val">${totalRecipes}</div><div class="stat-lbl">Total Recipes</div></div>
+                        <div class="stat-box"><div class="stat-val">${totalCooks}</div><div class="stat-lbl">Total Meals Cooked</div></div>
+                        <div class="stat-box"><div class="stat-val">${forgottenGems}</div><div class="stat-lbl">Forgotten Gems (>60d)</div></div>
+                        <div class="stat-box"><div class="stat-val">${Object.keys(users).length}</div><div class="stat-lbl">Family Accounts</div></div>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">Most Popular Dish: <b>${topRecipe}</b></p>
+                    
+                    <hr style="margin:16px 0; border:none; border-top:1px solid var(--border-color);">
+                    
+                    <h3 style="margin-bottom:8px;">Manage Family Accounts</h3>
+                    <div class="form-group" style="display:flex; gap:8px;">
+                        <input type="text" id="adminNewUserName" class="form-control" placeholder="Add profile name...">
+                        <button class="btn" style="width:auto; padding:0 16px;" onclick="window.adminAddUser()">Add Profile</button>
+                    </div>
+                    <div id="adminUserList" style="margin-bottom:16px;">
+                        ${Object.entries(users).map(([k, u]) => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #EEE;">
+                                <span>${u.name}</span>
+                                <button class="card-btn delete-btn" onclick="window.adminRemoveUser('${k}')">Remove</button>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <button class="btn" style="background:#d32f2f;" onclick="window.adminSignOut()">Sign Out Admin</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <h2 style="margin-bottom: 16px; text-align:center;">Admin Sign In</h2>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="adminPasswordInput" class="form-control" placeholder="Enter admin password">
+                    </div>
+                    <button class="btn" onclick="window.verifyAdminPassword()">Sign In</button>
+                `;
+            }
+        }
+
+        window.adminAddUser = function() {
+            const input = document.getElementById('adminNewUserName');
+            const name = input.value.trim();
+            if (!name) return;
+            push(usersRef, { name }).then(() => {
+                input.value = '';
+                renderAdminUI();
+            });
+        };
+
+        window.adminRemoveUser = function(key) {
+            if (confirm("Remove this profile account?")) {
+                remove(ref(db, `users/${key}`)).then(() => renderAdminUI());
+            }
+        };
+
+        window.verifyAdminPassword = function() {
+            const pwd = document.getElementById('adminPasswordInput').value.trim();
+            if (pwd === 'FOOD') {
+                isAdmin = true;
+                localStorage.setItem('recipe_admin_auth', 'true');
+                renderAdminUI();
+                document.getElementById('adminStatusBadge').style.display = 'inline-block';
+                window.filterAndRenderRecipes();
+            } else {
+                alert('Incorrect password!');
+            }
+        };
+
+        window.adminSignOut = function() {
+            isAdmin = false;
+            localStorage.removeItem('recipe_admin_auth');
+            document.getElementById('adminStatusBadge').style.display = 'none';
+            renderAdminUI();
+            window.filterAndRenderRecipes();
+        };
+
+        window.setFilter = function(filterType, pillElement) {
+            currentFilter = filterType;
+            document.querySelectorAll('.filter-pill').forEach(el => el.classList.remove('active'));
+            pillElement.classList.add('active');
+            window.filterAndRenderRecipes();
+        };
+
+        window.filterAndRenderRecipes = function() {
+            const searchQuery = (document.getElementById('searchInput')?.value || '').toLowerCase();
+            const grid = document.getElementById('recipeGrid');
+            if (!grid) return;
+
+            let recipeEntries = Object.entries(recipes);
+
+            if (currentFilter === 'popular') {
+                recipeEntries.sort((a, b) => (b[1].cookCount || 0) - (a[1].cookCount || 0));
+            }
+
+            const filtered = recipeEntries.filter(([key, recipe]) => {
+                const matchesSearch = (recipe.title || '').toLowerCase().includes(searchQuery) || 
+                                     (recipe.details || '').toLowerCase().includes(searchQuery);
+                
+                if (!matchesSearch) return false;
+
+                if (currentFilter === 'all' || currentFilter === 'popular') return true;
+                if (currentFilter === 'favorites') return recipe.favorites && recipe.favorites[currentUser];
+                if (currentFilter === 'food') return ['starters', 'mains', 'desserts'].includes(recipe.category);
+                if (currentFilter === 'vegetarian') return recipe.veg;
+                if (currentFilter === 'gluten-free') return recipe.gf;
+                if (currentFilter === 'quick') return recipe.quick;
+                
+                return recipe.category === currentFilter;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding: 30px;">No recipes found.</p>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(([key, recipe]) => `
+                <div class="recipe-card">
+                    ${recipe.image ? `<img src="${recipe.image}" class="recipe-img" alt="${recipe.title}">` : ''}
+                    <div class="recipe-header">
+                        <div>
+                            <div class="recipe-tags">
+                                <span class="recipe-category">${recipe.category}</span>
+                                ${recipe.veg ? `<span class="tag-badge">Veg</span>` : ''}
+                                ${recipe.gf ? `<span class="tag-badge">Gluten-Free</span>` : ''}
+                                ${recipe.quick ? `<span class="tag-badge">Quick</span>` : ''}
+                            </div>
+                            <div class="recipe-title">${recipe.title}</div>
+                        </div>
+                        <div class="recipe-actions">
+                            <button class="card-btn" onclick="window.openInAppModal('${key}')">Open</button>
+                            ${isAdmin ? `
+                                <button class="card-btn" style="background:#e3f2fd; color:#1565c0; border-color:#bbdefb;" onclick="window.editRecipeCategory('${key}')">Edit</button>
+                                <button class="card-btn delete-btn" onclick="window.deleteRecipe('${key}')">Delete</button>
+                            ` : ''}
+                            <button class="fav-btn ${(recipe.favorites && recipe.favorites[currentUser]) ? 'favorited' : ''}" onclick="window.toggleFavorite('${key}')">★</button>
+                        </div>
+                    </div>
+                    <div class="recipe-meta">
+                        <span>🍳 Cooked ${recipe.cookCount || 0}x</span>
+                        <span>⭐ ${calcAvgRating(recipe.reviews)}</span>
+                    </div>
+                    <div class="recipe-details">${recipe.details}</div>
+                </div>
+            `).join('');
+        };
+
+        function calcAvgRating(reviews) {
+            if (!reviews) return 'No reviews';
+            const vals = Object.values(reviews).map(r => parseInt(r.rating));
+            const avg = (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
+            return `${avg} (${vals.length})`;
+        }
+
+        window.toggleFavorite = function(key) {
+            const currentFav = recipes[key]?.favorites?.[currentUser] || false;
+            update(ref(db, `recipes/${key}/favorites`), { [currentUser]: !currentFav });
+        };
+
+        window.editRecipeCategory = function(key) {
+            if (!isAdmin) return;
+            const currentRecipe = recipes[key];
+            if (!currentRecipe) return;
+
+            const newCategory = prompt("Move to category (starters, mains, desserts, drinks):", currentRecipe.category);
+            if (!newCategory) return;
+
+            const normalized = newCategory.trim().toLowerCase();
+            if (['starters', 'mains', 'desserts', 'drinks'].includes(normalized)) {
+                update(ref(db, `recipes/${key}`), { category: normalized });
+            } else {
+                alert("Invalid category!");
+            }
+        };
+
+        window.deleteRecipe = function(key) {
+            if (!isAdmin) return;
+            if (confirm("Delete this recipe card?")) {
+                remove(ref(db, `recipes/${key}`));
+            }
+        };
+
+        window.saveUploadedRecipe = function() {
+            const title = document.getElementById('upTitle').value.trim();
+            const category = document.getElementById('upCategory').value;
+            const image = document.getElementById('upImage').value.trim();
+            const details = document.getElementById('upDetails').value.trim();
+            const veg = document.getElementById('tagVeg').checked;
+            const gf = document.getElementById('tagGF').checked;
+            const quick = document.getElementById('tagQuick').checked;
+
+            if(!title || !details) {
+                alert('Please fill in title and details.');
+                return;
+            }
+
+            push(recipesRef, {
+                title, category, image, details, veg, gf, quick,
+                cookCount: 0,
+                createdAt: Date.now()
+            }).then(() => {
+                document.getElementById('upTitle').value = '';
+                document.getElementById('upImage').value = '';
+                document.getElementById('upDetails').value = '';
+                window.switchView('browse', document.querySelectorAll('nav .nav-item')[0]);
+            });
+        };
+
+        window.openInAppModal = function(key) {
+            const recipe = recipes[key];
+            if (!recipe) return;
+
+            currentModalKey = key;
+            currentModalRecipe = recipe;
+            originalModalDetails = recipe.details;
+
+            document.getElementById('modalCategory').innerText = recipe.category;
+            document.getElementById('modalTitle').innerText = recipe.title;
+            document.getElementById('modalDetails').innerText = recipe.details;
+            
+            const modalImg = document.getElementById('modalImage');
+            if (recipe.image) {
+                modalImg.src = recipe.image;
+                modalImg.style.display = 'block';
+            } else {
+                modalImg.style.display = 'none';
+            }
+
+            renderReviews(recipe.reviews);
+
+            document.querySelectorAll('.scale-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+            document.getElementById('recipeModal').classList.add('active');
+        };
+
+        window.closeAppModal = function(e) {
+            if (!e || e.target === document.getElementById('recipeModal') || e.currentTarget.classList.contains('app-modal-close')) {
+                document.getElementById('recipeModal').classList.remove('active');
+            }
+        };
+
+        window.markRecipeCooked = function() {
+            if (!currentModalKey) return;
+            const newCount = (currentModalRecipe.cookCount || 0) + 1;
+            update(ref(db, `recipes/${currentModalKey}`), {
+                cookCount: newCount,
+                lastCooked: Date.now()
+            }).then(() => alert(`Marked as cooked! Total times cooked: ${newCount}`));
+        };
+
+        window.exportRecipeCard = function() {
+            if (!currentModalRecipe) return;
+            const text = `📖 ${currentModalRecipe.title.toUpperCase()}\nCategory: ${currentModalRecipe.category}\n\n${currentModalRecipe.details}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Recipe card copied to clipboard!");
+            });
+        };
+
+        window.scaleIngredients = function(factor, element) {
+            document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+
+            if (!originalModalDetails) return;
+
+            const scaledText = originalModalDetails.replace(/(\d+(\.\d+)?)/g, (match) => {
+                const num = parseFloat(match);
+                return (num * factor).toString();
+            });
+
+            document.getElementById('modalDetails').innerText = scaledText;
+        };
+
+        window.toggleUnits = function(system) {
+            currentUnitSystem = system;
+            document.getElementById('unitMetricBtn').classList.toggle('active', system === 'metric');
+            document.getElementById('unitImperialBtn').classList.toggle('active', system === 'imperial');
+
+            if (!originalModalDetails) return;
+
+            let converted = originalModalDetails;
+            if (system === 'imperial') {
+                converted = converted.replace(/(\d+)\s*g/gi, (m, g) => `${(parseInt(g) / 28.35).toFixed(1)} oz`);
+                converted = converted.replace(/(\d+)\s*ml/gi, (m, ml) => `${(parseInt(ml) / 240).toFixed(1)} cups`);
+            }
+            document.getElementById('modalDetails').innerText = converted;
+        };
+
+        window.startCookingMode = function() {
+            if (!originalModalDetails) return;
+            cookingSteps = originalModalDetails.split('\n').filter(s => s.trim().length > 0);
+            if (cookingSteps.length === 0) return;
+            
+            currentStepIdx = 0;
+            renderCookingStep();
+            document.getElementById('cookingModeOverlay').classList.add('active');
+        };
+
+        window.navStep = function(dir) {
+            currentStepIdx += dir;
+            if (currentStepIdx < 0) currentStepIdx = 0;
+            if (currentStepIdx >= cookingSteps.length) currentStepIdx = cookingSteps.length - 1;
+            renderCookingStep();
+        };
+
+        function renderCookingStep() {
+            document.getElementById('cookingStepHeader').innerText = `Step ${currentStepIdx + 1} of ${cookingSteps.length}`;
+            document.getElementById('cookingStepText').innerText = cookingSteps[currentStepIdx];
+        }
+
+        window.exitCookingMode = function() {
+            document.getElementById('cookingModeOverlay').classList.remove('active');
+        };
+
+        window.setKitchenTimer = function(minutes) {
+            timerSeconds = minutes * 60;
+            updateTimerDisplay();
+        };
+
+        window.toggleTimer = function() {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+            } else {
+                if (timerSeconds <= 0) return;
+                timerRunning = true;
+                timerInterval = setInterval(() => {
+                    timerSeconds--;
+                    updateTimerDisplay();
+                    if (timerSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        alert("⏱️ Kitchen Timer Finished!");
+                    }
+                }, 1000);
+            }
+        };
+
+        window.resetTimer = function() {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerSeconds = 0;
+            updateTimerDisplay();
+        };
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timerDisplay').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        window.addShoppingItem = function() {
+            const input = document.getElementById('shopItemInput');
+            const name = input.value.trim();
+            if (!name) return;
+            push(shoppingRef, { name, checked: false }).then(() => { input.value = ''; });
+        };
+
+        window.addRecipeToShoppingList = function() {
+            if (!currentModalRecipe) return;
+            const lines = currentModalRecipe.details.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                const cleanLine = line.trim();
+                if (cleanLine.length > 0) {
+                    push(shoppingRef, { name: cleanLine, checked: false });
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) alert(`Added ${addedCount} items to your shopping list!`);
+        };
+
+        function renderShoppingList() {
+            const container = document.getElementById('shoppingListContainer');
+            if (!container) return;
+
+            const entries = Object.entries(shoppingItems);
+            if (entries.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px;">Shopping list is empty.</p>`;
+                return;
+            }
+
+            container.innerHTML = entries.map(([key, item]) => `
+                <div class="shopping-item ${item.checked ? 'checked' : ''}">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="window.toggleShoppingItem('${key}', ${item.checked})">
+                        <span>${item.name}</span>
+                    </label>
+                    <button class="card-btn delete-btn" onclick="window.deleteShoppingItem('${key}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        window.toggleShoppingItem = function(key, currentChecked) {
+            update(ref(db, `shopping/${key}`), { checked: !currentChecked });
+        };
+
+        window.deleteShoppingItem = function(key) {
+            remove(ref(db, `shopping/${key}`));
+        };
+
+        window.submitRecipeReview = function() {
+            if (!currentModalKey) return;
+            const rating = document.getElementById('reviewRatingSelect').value;
+            const text = document.getElementById('reviewTextInput').value.trim();
+
+            push(ref(db, `recipes/${currentModalKey}/reviews`), {
+                user: currentUser,
+                rating,
+                text,
+                date: Date.now()
+            }).then(() => {
+                document.getElementById('reviewTextInput').value = '';
+            });
+        };
+
+        function renderReviews(reviews) {
+            const container = document.getElementById('recipeReviewsContainer');
+            if (!container) return;
+            if (!reviews) {
+                container.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted);">No reviews yet.</p>`;
+                return;
+            }
+
+            const entries = Object.values(reviews);
+            container.innerHTML = entries.map(r => `
+                <div class="review-card">
+                    <div style="font-weight:700;">${r.user} — ⭐ ${r.rating}/5</div>
+                    <div>${r.text}</div>
+                </div>
+            `).join('');
+        }
+
+        window.createCollection = function() {
+            const input = document.getElementById('newCollectionName');
+            const name = input.value.trim();
+            if (!name) return;
+
+            push(collectionsRef, {
+                name,
+                owner: currentUser,
+                recipes: {}
+            }).then(() => { input.value = ''; });
+        };
+
+        window.promptAddToCollection = function() {
+            if (!currentModalKey) return;
+            const userCols = Object.entries(collections).filter(([k, c]) => c.owner === currentUser);
+            if (userCols.length === 0) {
+                alert("Create a collection in the Lists tab first!");
+                return;
+            }
+
+            const names = userCols.map(([k, c], i) => `${i + 1}. ${c.name}`).join('\n');
+            const choice = prompt(`Choose collection number to add this recipe:\n${names}`);
+            const idx = parseInt(choice) - 1;
+
+            if (userCols[idx]) {
+                const colKey = userCols[idx][0];
+                update(ref(db, `collections/${colKey}/recipes`), {
+                    [currentModalKey]: true
+                }).then(() => alert("Added to collection!"));
+            }
+        };
+
+        function renderCollections() {
+            const container = document.getElementById('collectionsContainer');
+            if (!container) return;
+
+            const userCols = Object.entries(collections).filter(([k, c]) => c.owner === currentUser);
+            if (userCols.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px;">No saved collections yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = userCols.map(([key, col]) => {
+                const colRecipes = col.recipes ? Object.keys(col.recipes).map(rk => recipes[rk]).filter(Boolean) : [];
+                return `
+                    <div class="admin-card" style="margin-bottom:12px;">
+                        <h3>${col.name}</h3>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">${colRecipes.length} recipes</p>
+                        <div style="margin-top:8px;">
+                            ${colRecipes.map(r => `<div style="font-size:0.9rem; padding:2px 0;">• ${r.title}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    </script>
+</body>
+</html>
