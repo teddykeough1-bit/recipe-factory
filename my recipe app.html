@@ -38,7 +38,7 @@
         header {
             background-color: var(--primary);
             color: white;
-            padding: 16px;
+            padding: 12px 16px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             z-index: 10;
             display: flex;
@@ -50,15 +50,45 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            gap: 4px;
         }
 
-        .user-tag {
-            font-size: 0.75rem;
-            background: rgba(255,255,255,0.25);
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-top: 2px;
-            font-weight: 500;
+        /* Pill Dropdown Button */
+        .user-pill-dropdown {
+            position: relative;
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.35);
+            padding: 4px 12px;
+            border-radius: 16px;
+        }
+        
+        .user-pill-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            padding-right: 14px;
+        }
+
+        .user-pill-dropdown::after {
+            content: '▼';
+            font-size: 0.6rem;
+            color: white;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .user-pill-select option {
+            background: white;
+            color: var(--text-main);
         }
 
         .admin-badge {
@@ -185,7 +215,7 @@
 
         .recipe-img {
             width: 100%;
-            height: 160px;
+            height: 180px;
             object-fit: cover;
             border-radius: 8px;
             margin-bottom: 12px;
@@ -366,15 +396,16 @@
             text-transform: uppercase;
         }
 
+        /* NEAR FULLSCREEN MODAL */
         .app-modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 2000;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 10px;
         }
         .app-modal-overlay.active {
             display: flex;
@@ -382,17 +413,17 @@
         .app-modal-card {
             background: white;
             width: 100%;
-            max-width: 550px;
-            max-height: 85vh;
+            max-width: 700px;
+            height: 95vh;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             animation: popIn 0.2s ease-out;
         }
         @keyframes popIn {
-            from { transform: scale(0.9); opacity: 0; }
+            from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
         .app-modal-header {
@@ -412,7 +443,7 @@
             background: none;
             border: none;
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             cursor: pointer;
             line-height: 1;
         }
@@ -456,6 +487,7 @@
             margin: 8px 0;
         }
 
+        /* SLIDE COOKING MODE */
         .cooking-mode-overlay {
             display: none;
             position: fixed;
@@ -468,16 +500,28 @@
         .cooking-mode-overlay.active {
             display: flex;
         }
-        .step-focus-text {
+        .step-focus-card {
             flex: 1;
-            font-size: 1.5rem;
-            line-height: 1.5;
-            color: #222;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 20px;
+            background: #F8F9FA;
+            border-radius: 12px;
+            margin: 16px 0;
+            border: 1px solid var(--border-color);
+        }
+        .step-title-slide {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .step-focus-text {
+            font-size: 1.3rem;
+            line-height: 1.5;
+            color: #222;
         }
 
         .shopping-item {
@@ -509,7 +553,11 @@
     <header>
         <div class="header-left">
             <span id="app-header-title" style="font-weight:700;">Family Recipes</span>
-            <span id="userProfileTag" class="user-tag">Logged in as: Guest</span>
+            <div class="user-pill-dropdown">
+                <select id="headerUserSelect" class="user-pill-select" onchange="window.selectHeaderAccount(this.value)">
+                    <!-- Dynamically populated: Logged in as: ____ -->
+                </select>
+            </div>
         </div>
         <span id="adminStatusBadge" class="admin-badge" style="display: none;">Admin</span>
     </header>
@@ -557,6 +605,10 @@
                 <input type="url" id="upImage" class="form-control" placeholder="https://images.unsplash.com/photo-...">
             </div>
             <div class="form-group">
+                <label>Preset Cooking Timer (Minutes, Optional)</label>
+                <input type="number" id="upTimerMins" class="form-control" placeholder="e.g., 25">
+            </div>
+            <div class="form-group">
                 <label>Dietary & Quick Tags</label>
                 <div style="display:flex; gap:12px; font-size:0.9rem;">
                     <label><input type="checkbox" id="tagVeg"> Vegetarian</label>
@@ -565,7 +617,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Recipe Details & Ingredients</label>
+                <label>Recipe Details & Instructions</label>
                 <textarea id="upDetails" class="form-control" placeholder="List ingredients with numbers (e.g., 2 eggs, 250g flour) and step-by-step instructions..."></textarea>
             </div>
             <button class="btn" onclick="window.saveUploadedRecipe()">Save Recipe Card</button>
@@ -573,9 +625,9 @@
 
         <!-- COLLECTIONS VIEW -->
         <div id="view-collections" class="view-content">
-            <h3 style="margin-bottom:12px;">My Saved Collections</h3>
+            <h3 style="margin-bottom:12px;">Saved Collections</h3>
             <div class="form-group" style="display:flex; gap:8px;">
-                <input type="text" id="newCollectionName" class="form-control" placeholder="New collection name (e.g., Sunday Roast)...">
+                <input type="text" id="newCollectionName" class="form-control" placeholder="New collection name...">
                 <button class="btn" style="width:auto; padding: 0 16px;" onclick="window.createCollection()">Create</button>
             </div>
             <div id="collectionsContainer"></div>
@@ -590,20 +642,6 @@
             <div id="shoppingListContainer"></div>
         </div>
 
-        <!-- LOG IN & ACCOUNT SELECTOR VIEW -->
-        <div id="view-account" class="view-content">
-            <div class="admin-card" style="text-align:center;">
-                <h2 style="margin-bottom: 12px;">LOG IN</h2>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Select your profile below to tie ratings, favorites, and collections to your name.</p>
-                <div class="form-group" style="text-align:left;">
-                    <label>Select Profile</label>
-                    <select id="userSelector" class="form-control" onchange="window.selectAccount(this.value)">
-                        <!-- Populated dynamically -->
-                    </select>
-                </div>
-            </div>
-        </div>
-
         <!-- ADMIN PORTAL VIEW -->
         <div id="view-admin" class="view-content">
             <div class="admin-card" id="adminCardContent"></div>
@@ -611,7 +649,7 @@
 
     </div>
 
-    <!-- IN-APP WINDOW MODAL -->
+    <!-- NEAR FULLSCREEN IN-APP MODAL -->
     <div class="app-modal-overlay" id="recipeModal" onclick="window.closeAppModal(event)">
         <div class="app-modal-card" onclick="event.stopPropagation()">
             <div class="app-modal-header">
@@ -620,10 +658,10 @@
             </div>
             <div class="app-modal-body">
                 <img id="modalImage" class="recipe-img" style="display:none;" alt="Recipe photo">
-                <h2 id="modalTitle" style="margin-bottom: 8px; font-size: 1.4rem;">Recipe Title</h2>
+                <h2 id="modalTitle" style="margin-bottom: 8px; font-size: 1.5rem;">Recipe Title</h2>
                 
                 <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
-                    <button class="card-btn" style="background:#E8F5E9; color:#2E7D32;" onclick="window.markRecipeCooked()">🍳 Cooked This Today</button>
+                    <button class="card-btn" style="background:#E8F5E9; color:#2E7D32;" onclick="window.markRecipeCooked()">🍳 Cooked Today</button>
                     <button class="card-btn" onclick="window.startCookingMode()">📖 Cooking Mode</button>
                     <button class="card-btn" onclick="window.exportRecipeCard()">📋 Export Card</button>
                     <button class="card-btn" onclick="window.promptAddToCollection()">📁 Add to Collection</button>
@@ -643,7 +681,7 @@
                     </div>
                 </div>
 
-                <!-- Interactive Kitchen Timer -->
+                <!-- Kitchen Timer -->
                 <div class="utility-box">
                     <div class="utility-title">Kitchen Timer</div>
                     <div class="timer-preset-btns">
@@ -683,16 +721,20 @@
         </div>
     </div>
 
-    <!-- FULLSCREEN STEP-BY-STEP COOKING MODE -->
+    <!-- SLIDE-BASED STEP-BY-STEP COOKING MODE -->
     <div class="cooking-mode-overlay" id="cookingModeOverlay">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span id="cookingStepHeader" style="font-weight:700; color:var(--primary);">Step 1</span>
+            <span id="cookingSlideHeader" style="font-weight:700; color:var(--primary);">Slide 1</span>
             <button class="card-btn delete-btn" onclick="window.exitCookingMode()">Exit Cooking Mode</button>
         </div>
-        <div class="step-focus-text" id="cookingStepText">Loading step...</div>
+
+        <div class="step-focus-card" id="stepFocusCard">
+            <!-- Slide content renders dynamically -->
+        </div>
+
         <div style="display:flex; gap:12px;">
-            <button class="btn" style="background:#666;" onclick="window.navStep(-1)">Previous</button>
-            <button class="btn" onclick="window.navStep(1)">Next Step</button>
+            <button class="btn" style="background:#666;" onclick="window.navSlide(-1)">Previous</button>
+            <button class="btn" onclick="window.navSlide(1)">Next Slide</button>
         </div>
     </div>
 
@@ -713,10 +755,6 @@
         <button class="nav-item" onclick="window.switchView('shopping', this)">
             <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
             Grocery
-        </button>
-        <button class="nav-item" onclick="window.switchView('account', this)">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            LOG IN
         </button>
         <button class="nav-item" onclick="window.switchView('admin', this)">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
@@ -763,8 +801,8 @@
         let timerSeconds = 0;
         let timerRunning = false;
 
-        let cookingSteps = [];
-        let currentStepIdx = 0;
+        let slides = [];
+        let currentSlideIdx = 0;
 
         onValue(recipesRef, (snapshot) => {
             recipes = snapshot.val() || {};
@@ -778,7 +816,7 @@
 
         onValue(usersRef, (snapshot) => {
             users = snapshot.val() || {};
-            renderUserDropdown();
+            renderHeaderUserDropdown();
         });
 
         onValue(collectionsRef, (snapshot) => {
@@ -786,25 +824,27 @@
             renderCollections();
         });
 
-        updateUserTag();
-
-        function updateUserTag() {
-            document.getElementById('userProfileTag').innerText = `Logged in as: ${currentUser}`;
-        }
-
-        function renderUserDropdown() {
-            const select = document.getElementById('userSelector');
+        function renderHeaderUserDropdown() {
+            const select = document.getElementById('headerUserSelect');
             if (!select) return;
-            const userKeys = Object.keys(users);
-            select.innerHTML = `<option value="Guest" ${currentUser === 'Guest' ? 'selected' : ''}>Guest</option>` + 
-                userKeys.map(k => `<option value="${users[k].name}" ${currentUser === users[k].name ? 'selected' : ''}>${users[k].name}</option>`).join('');
+
+            const userList = ['Guest', ...Object.values(users).map(u => u.name)];
+            
+            if (!userList.includes(currentUser)) {
+                currentUser = 'Guest';
+                localStorage.setItem('recipe_current_user', 'Guest');
+            }
+
+            select.innerHTML = userList.map(name => 
+                `<option value="${name}" ${name === currentUser ? 'selected' : ''}>Logged in as: ${name}</option>`
+            ).join('');
         }
 
-        window.selectAccount = function(name) {
+        window.selectHeaderAccount = function(name) {
             currentUser = name;
             localStorage.setItem('recipe_current_user', name);
-            updateUserTag();
-            alert(`Logged in as ${name}`);
+            window.filterAndRenderRecipes();
+            renderCollections();
         };
 
         window.switchView = function(viewName, element) {
@@ -819,7 +859,6 @@
             if (viewName === 'upload') headerTitle.innerText = 'Add New Recipe';
             if (viewName === 'collections') headerTitle.innerText = 'Saved Collections';
             if (viewName === 'shopping') headerTitle.innerText = 'Shopping List';
-            if (viewName === 'account') headerTitle.innerText = 'LOG IN';
             if (viewName === 'admin') {
                 headerTitle.innerText = 'Admin Portal';
                 renderAdminUI();
@@ -914,6 +953,7 @@
                 renderAdminUI();
                 document.getElementById('adminStatusBadge').style.display = 'inline-block';
                 window.filterAndRenderRecipes();
+                renderCollections();
             } else {
                 alert('Incorrect password!');
             }
@@ -925,6 +965,7 @@
             document.getElementById('adminStatusBadge').style.display = 'none';
             renderAdminUI();
             window.filterAndRenderRecipes();
+            renderCollections();
         };
 
         window.setFilter = function(filterType, pillElement) {
@@ -976,6 +1017,7 @@
                                 ${recipe.veg ? `<span class="tag-badge">Veg</span>` : ''}
                                 ${recipe.gf ? `<span class="tag-badge">Gluten-Free</span>` : ''}
                                 ${recipe.quick ? `<span class="tag-badge">Quick</span>` : ''}
+                                ${recipe.timerMins ? `<span class="tag-badge" style="background:#FFF3E0; color:#E65100;">⏱️ ${recipe.timerMins}m</span>` : ''}
                             </div>
                             <div class="recipe-title">${recipe.title}</div>
                         </div>
@@ -1036,6 +1078,7 @@
             const title = document.getElementById('upTitle').value.trim();
             const category = document.getElementById('upCategory').value;
             const image = document.getElementById('upImage').value.trim();
+            const timerMins = document.getElementById('upTimerMins').value.trim();
             const details = document.getElementById('upDetails').value.trim();
             const veg = document.getElementById('tagVeg').checked;
             const gf = document.getElementById('tagGF').checked;
@@ -1048,11 +1091,13 @@
 
             push(recipesRef, {
                 title, category, image, details, veg, gf, quick,
+                timerMins: timerMins ? parseInt(timerMins) : null,
                 cookCount: 0,
                 createdAt: Date.now()
             }).then(() => {
                 document.getElementById('upTitle').value = '';
                 document.getElementById('upImage').value = '';
+                document.getElementById('upTimerMins').value = '';
                 document.getElementById('upDetails').value = '';
                 window.switchView('browse', document.querySelectorAll('nav .nav-item')[0]);
             });
@@ -1076,6 +1121,12 @@
                 modalImg.style.display = 'block';
             } else {
                 modalImg.style.display = 'none';
+            }
+
+            if (recipe.timerMins) {
+                window.setKitchenTimer(recipe.timerMins);
+            } else {
+                window.resetTimer();
             }
 
             renderReviews(recipe.reviews);
@@ -1136,26 +1187,48 @@
             document.getElementById('modalDetails').innerText = converted;
         };
 
+        /* SLIDE COOKING MODE IMPLEMENTATION */
         window.startCookingMode = function() {
             if (!originalModalDetails) return;
-            cookingSteps = originalModalDetails.split('\n').filter(s => s.trim().length > 0);
-            if (cookingSteps.length === 0) return;
+            const rawLines = originalModalDetails.split('\n').filter(s => s.trim().length > 0);
+            if (rawLines.length === 0) return;
             
-            currentStepIdx = 0;
-            renderCookingStep();
+            slides = [];
+            rawLines.forEach((line, idx) => {
+                slides.push({ type: 'header', text: `Step ${idx + 1}` });
+                slides.push({ type: 'content', text: line, stepNum: idx + 1 });
+            });
+
+            currentSlideIdx = 0;
+            renderCookingSlide();
             document.getElementById('cookingModeOverlay').classList.add('active');
         };
 
-        window.navStep = function(dir) {
-            currentStepIdx += dir;
-            if (currentStepIdx < 0) currentStepIdx = 0;
-            if (currentStepIdx >= cookingSteps.length) currentStepIdx = cookingSteps.length - 1;
-            renderCookingStep();
+        window.navSlide = function(dir) {
+            currentSlideIdx += dir;
+            if (currentSlideIdx < 0) currentSlideIdx = 0;
+            if (currentSlideIdx >= slides.length) currentSlideIdx = slides.length - 1;
+            renderCookingSlide();
         };
 
-        function renderCookingStep() {
-            document.getElementById('cookingStepHeader').innerText = `Step ${currentStepIdx + 1} of ${cookingSteps.length}`;
-            document.getElementById('cookingStepText').innerText = cookingSteps[currentStepIdx];
+        function renderCookingSlide() {
+            const card = document.getElementById('stepFocusCard');
+            const current = slides[currentSlideIdx];
+            document.getElementById('cookingSlideHeader').innerText = `Slide ${currentSlideIdx + 1} of ${slides.length}`;
+
+            if (current.type === 'header') {
+                card.innerHTML = `<div class="step-title-slide">${current.text}</div>`;
+            } else {
+                card.innerHTML = `
+                    <div style="font-size:0.9rem; font-weight:700; color:var(--text-muted); margin-bottom:12px;">STEP ${current.stepNum} INSTRUCTIONS</div>
+                    <div class="step-focus-text">${current.text}</div>
+                    ${currentModalRecipe && currentModalRecipe.timerMins ? `
+                        <button class="card-btn" style="margin-top:20px; padding:8px 16px; background:var(--primary); color:white; border:none;" onclick="window.setKitchenTimer(${currentModalRecipe.timerMins}); window.toggleTimer();">
+                            ⏱️ Start ${currentModalRecipe.timerMins}m Timer
+                        </button>
+                    ` : ''}
+                `;
+            }
         }
 
         window.exitCookingMode = function() {
@@ -1296,6 +1369,13 @@
             }).then(() => { input.value = ''; });
         };
 
+        window.deleteCollection = function(key) {
+            if (!isAdmin) return;
+            if (confirm("Delete this saved collection list?")) {
+                remove(ref(db, `collections/${key}`));
+            }
+        };
+
         window.promptAddToCollection = function() {
             if (!currentModalKey) return;
             const userCols = Object.entries(collections).filter(([k, c]) => c.owner === currentUser);
@@ -1320,18 +1400,21 @@
             const container = document.getElementById('collectionsContainer');
             if (!container) return;
 
-            const userCols = Object.entries(collections).filter(([k, c]) => c.owner === currentUser);
-            if (userCols.length === 0) {
+            const allCols = Object.entries(collections);
+            if (allCols.length === 0) {
                 container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:30px;">No saved collections yet.</p>`;
                 return;
             }
 
-            container.innerHTML = userCols.map(([key, col]) => {
+            container.innerHTML = allCols.map(([key, col]) => {
                 const colRecipes = col.recipes ? Object.keys(col.recipes).map(rk => recipes[rk]).filter(Boolean) : [];
                 return `
                     <div class="admin-card" style="margin-bottom:12px;">
-                        <h3>${col.name}</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">${colRecipes.length} recipes</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3>${col.name}</h3>
+                            ${isAdmin ? `<button class="card-btn delete-btn" onclick="window.deleteCollection('${key}')">Delete List</button>` : ''}
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">Owner: ${col.owner} • ${colRecipes.length} recipes</p>
                         <div style="margin-top:8px;">
                             ${colRecipes.map(r => `<div style="font-size:0.9rem; padding:2px 0;">• ${r.title}</div>`).join('')}
                         </div>
